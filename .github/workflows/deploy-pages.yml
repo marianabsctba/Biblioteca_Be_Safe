@@ -1,0 +1,52 @@
+name: Publicar Biblioteca Be Safe
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/deploy-pages.yml"
+      - "library.zip.part-*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Baixar os arquivos do repositório
+        uses: actions/checkout@v6
+
+      - name: Reunir e conferir a biblioteca
+        shell: bash
+        run: |
+          test "$(find . -maxdepth 1 -type f -name 'library.zip.part-*' | wc -l)" -eq 18
+          cat library.zip.part-* > biblioteca.zip
+          echo "656d7964b345efe323b2f4ec4bc5a4383e563bf33e30f4a5edff77e1159277fd  biblioteca.zip" | sha256sum -c -
+          unzip -q biblioteca.zip
+          test -f Biblioteca_Be_Safe/index.html
+          test "$(find Biblioteca_Be_Safe/pdfs -maxdepth 1 -type f -name '*.pdf' | wc -l)" -eq 82
+          test "$(find Biblioteca_Be_Safe/covers -maxdepth 1 -type f -name '*.jpg' | wc -l)" -eq 82
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Preparar o site
+        uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: ./Biblioteca_Be_Safe
+
+      - name: Publicar o site
+        id: deployment
+        uses: actions/deploy-pages@v5.0.0
