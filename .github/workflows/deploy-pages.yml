@@ -38,7 +38,8 @@ jobs:
           test -f Biblioteca_Be_Safe/index.html
           test "$(find Biblioteca_Be_Safe/pdfs -maxdepth 1 -type f -name '*.pdf' | wc -l)" -eq 82
           test "$(find Biblioteca_Be_Safe/covers -maxdepth 1 -type f -name '*.jpg' | wc -l)" -eq 82
-
+      - name: Atualizar Portal Principal
+        run: sed -i 's|https://marianabsctba.github.io/|https://marianabsctba.github.io/Be_Safe_Academy/|' Biblioteca_Be_Safe/index.html
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v6
 
