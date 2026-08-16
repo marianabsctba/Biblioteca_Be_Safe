@@ -199,11 +199,42 @@ jobs:
             }
           """
 
+          mobile_reader_script = """
+            <script>
+              /* BE SAFE MOBILE PDF FIX — 2026-08-16 */
+              (function () {
+                function useNativePdfReader() {
+                  return window.matchMedia("(max-width: 760px)").matches ||
+                    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                }
+
+                document.addEventListener("click", function (event) {
+                  var button = event.target.closest("button[data-open]");
+                  if (!button || !useNativePdfReader()) return;
+
+                  var id = button.getAttribute("data-open");
+                  var material = Array.isArray(window.MATERIALS)
+                    ? window.MATERIALS.find(function (item) { return item.id === id; })
+                    : null;
+
+                  if (!material || !material.pdf) return;
+
+                  event.preventDefault();
+                  event.stopImmediatePropagation();
+                  window.location.assign(material.pdf);
+                }, true);
+              }());
+            </script>
+          """
+
           if 'class="book-link"' not in html:
               html = html.replace('<main class="catalog">', '<main class="catalog">\n' + book_markup, 1)
 
           if "BE SAFE LIBRARY MOBILE FIX" not in html:
               html = html.replace("</style>", mobile_css + "\n  </style>", 1)
+
+          if "BE SAFE MOBILE PDF FIX" not in html:
+              html = html.replace("</body>", mobile_reader_script + "\n</body>", 1)
 
           path.write_text(html, encoding="utf-8")
 
